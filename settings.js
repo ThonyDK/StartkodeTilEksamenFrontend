@@ -1,1 +1,1 @@
-export const SERVER = "http://localhost:8080/api/kandidats"
+export const SERVER = "https://eksamenstestbackend.azurewebsites.net/api"  //Taget fra azure app service URL: derefter skal der indsættes endpoint fra backend
