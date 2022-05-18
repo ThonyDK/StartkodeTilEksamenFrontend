@@ -1,37 +1,39 @@
-import { renderTemplate, setActive, showPage } from "./utils.js"
-import { setupLoginHandlers, logout, updateLoginDependentComponents } from "./js-for-pages/login.js"
-import {getAllCars } from "./js-for-pages/seeOurCars.js";
-import {addCarHandles}from"./js-for-pages/addCar.js"
+import "https://unpkg.com/navigo"  //Will create the global Navigo object used below
 
-function renderMenuItems(evt) {
-    const element = evt.target
-    setActive(element)
-    const id = element.id;
-    renderTemplate(id)  //This setups the HTML for the page
-    switch (id) {
-        //Here you can execute JavaScript for the selected page
-        // case "page-1": {
-        //   break
-        // }
-        case "page-see-cars": {
-            getAllCars()
-            break
-        }
-        case "page-add-cars":{
-            addCarHandles()
-            break
-        }
-        case "page-login": {
-            setupLoginHandlers()
-            break
-        }
-        case "page-logout": {
-            logout()
-            break
-        }
-    }
-}
 
-document.getElementById("menu").onclick = renderMenuItems;
-showPage("page-about") //Set the default page to render
-updateLoginDependentComponents()
+import { addHandler } from "./pages/navigate/navigate.js";
+import { renderText, setActiveLink, renderTemplate, loadTemplate} from "./utils.js"
+
+window.addEventListener("load", async () => {
+
+    const templateHome = await loadTemplate("./pages/home/home.html")
+    const templateAbout = await loadTemplate("./pages/about/about.html")
+    const templateProducts = await loadTemplate("./pages/products/products.html")
+    const templateNavigate = await loadTemplate("./pages/navigate/navigate.html")
+
+    const router = new Navigo("/", { hash: true });
+    router
+        .hooks({
+            before(done, match) {
+                setActiveLink("menu", match.url)
+                done()
+            }
+        })
+        .on("/", () => renderTemplate(templateHome, "content"))
+        .on("/about", () => renderTemplate(templateAbout, "content"))
+        .on("/products", (match) => {
+            renderTemplate(templateProducts, "content")
+            if (match.params) {
+                document.getElementById("selected-product-id").innerText = match.params.id
+            }
+        })
+        .on("/show-match", (match) => renderText(`<pre>${JSON.stringify(match, null, 2)}</pre>`, "content"))
+        .on("/navigate-programatically", () => {
+            renderTemplate(templateNavigate, "content")
+            addHandler(router)
+        })
+        .notFound(() => renderText("No page for this route found", "content"))
+        .resolve()
+});
+
+window.onerror = (e) => alert(e)
